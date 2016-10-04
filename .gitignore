@@ -1,0 +1,7 @@
+*.pyc
+temp/
+addInfo/
+.idea/
+config.ini
+*.sqlite3
+*.lock
