@@ -11,8 +11,8 @@ from telebot import types
 
 import db_connector
 from registration import register_flow
-import admin_functions
-
+import admin_functions, do_quest
+import standard, utils
 
 #import logging
 #logger = telebot.logger
@@ -77,6 +77,13 @@ def handle_admin_com(message):
     """
     db_connector.save_to_log('user', message)
     admin_functions.admin_flow(bot, message)
+
+@bot.message_handler(content_types=['text','photo','document', 'location'],
+                     func=lambda message: db_connector.get_user_operation(message.from_user.id)[0] in (do_quest.opDoQest))
+@bot.message_handler(content_types=['text'], func=lambda message: utils.text_lower_wo_command(message) in (utils.text_lower_wo_command(standard.start_quest_command),))
+def handle_do_quest(message):
+    #Тут перенаправление на корневую функцию файла do_quest.py
+    pass
 
 #Сюда добавлять функции/хендлеры обработки.
 

@@ -35,7 +35,7 @@ def get_user_operation(id):
     id - TelegramID пользователя. message.from_user.id
     return (operation, status, additional_info)
     """
-    sql = '''select Telegramid, current_operation, operation_status, additional_info from user_operation where Telegramid=?'''
+    sql = '''select current_operation, operation_status, additional_info from user_operation where Telegramid=?'''
     (db, cursor) = sql_lite_connect()
     cursor.execute(sql, (id,))
     result = cursor.fetchone()
@@ -43,7 +43,7 @@ def get_user_operation(id):
         cursor.execute('INSERT into user_operation (Telegramid) values (?)', (id,))
         operation = (None, None, None)
     else:
-        operation = (result[1], result[2], result[3])
+        operation = (result[0], result[1], result[2])
     sql_lite_close(db)
     return operation
 

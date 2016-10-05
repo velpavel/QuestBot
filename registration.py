@@ -18,6 +18,7 @@ import configparser
 from telebot import types
 opRegister = 'register'
 import re, random
+import standard
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -40,7 +41,7 @@ def next_step(bot, message):
 def finish_reg(bot, message):
     db_connector.register_user(message.from_user.id, registrationDone=1)
     db_connector.put_user_operation(message.from_user.id)
-    bot.send_message(message.chat.id, 'Регистрация завершена', reply_markup=types.ReplyKeyboardHide())
+    bot.send_message(message.chat.id, 'Регистрация завершена', reply_markup=standard.standard_keyboard(message.from_user.id))
 
 def ask_name(bot, message):
     bot.send_message(message.chat.id, 'Представьтесь. Введите ваши Фамилию и имя\nPut your first and last names.', reply_markup=types.ReplyKeyboardHide())
