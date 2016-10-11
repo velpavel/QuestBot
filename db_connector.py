@@ -163,3 +163,45 @@ def last_log_rec(last=10):
     result = cursor.fetchall()
     sql_lite_close(db)
     return 'Последние записи из лога. Количество {}:\n'.format(last)+'\n'.join([' | '.join([str(a) for a in entry]) for entry in result])
+
+# /Операции работы с таблицами квестов
+def get_quest_list():
+    """Получить список квестов
+    """
+    sql = '''select ID, Name, Description from quest_quest where Active=1'''
+    (db, cursor) = sql_lite_connect()
+    cursor.execute(sql, (id,))
+    result = cursor.fetchall()
+    sql_lite_close(db)
+    return result
+
+def get_next_question(quest_id, question_id=None):
+    """Получить следующий вопрос
+    """
+    sql_t = '''select ID, description, answer_type, correct_answer from quest_task
+        where Active=1 {}
+        and quest_id=?
+        order by sequence
+        limit 1'''
+    sql_next='and sequence>(select sequence from quest_task where id={})'
+    sql_first=''
+    if question_id:
+        sql = sql_t.format(sql_next.format(question_id))
+    else:
+        sql = sql_t.format(sql_first)
+    (db, cursor) = sql_lite_connect()
+    cursor.execute(sql, (quest_id,))
+    result = cursor.fetchone()
+    sql_lite_close(db)
+    return result
+
+def get_question(question_id):
+    """Получить вопрос по id
+    """
+    sql = '''select ID, description, answer_type, correct_answer from quest_task
+        where Active=1 and ID=?'''
+    (db, cursor) = sql_lite_connect()
+    cursor.execute(sql, (question_id,))
+    result = cursor.fetchone()
+    sql_lite_close(db)
+    return result
