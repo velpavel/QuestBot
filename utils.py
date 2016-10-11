@@ -32,4 +32,4 @@ def Distance(llat1, llong1,llat2,llong2):
     x = sl1*sl2+cl1*cl2*cdelta
     ad = math.atan2(y,x)
     dist = ad*rad
-    return dist
+    return round(dist)

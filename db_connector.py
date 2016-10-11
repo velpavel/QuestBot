@@ -170,7 +170,7 @@ def get_quest_list():
     """
     sql = '''select ID, Name, Description from quest_quest where Active=1'''
     (db, cursor) = sql_lite_connect()
-    cursor.execute(sql, (id,))
+    cursor.execute(sql,)
     result = cursor.fetchall()
     sql_lite_close(db)
     return result

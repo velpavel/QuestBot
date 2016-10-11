@@ -11,5 +11,5 @@ def standard_keyboard(user_id=None):
     #         row.append(types.KeyboardButton(c.capitalize()))
     #     print(row)
     #     markup.row(row)
-    markup.row(start_quest_command = 'Найти квест')
+    markup.row(start_quest_command)
     return markup

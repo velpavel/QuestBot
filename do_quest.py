@@ -33,75 +33,89 @@ def put_operations():
 def show_quest_list():
     """Отображение списка квестов.
 
-    @Написано, не тестировано
+    @Написано, тестируется
     В   additional_info['buttons-quest_id'] пишет текст кнопки - id квеста"""
+    global status, additional_info
     quest_list = db_connector.get_quest_list()
     if not quest_list:
-        bot.send_message(message.chat.id,'Нет квесвтов', reply_markup=standard.standard_keyboard(message.from_user.id))
+        bot.send_message(message.chat.id, 'Нет квестов', reply_markup=standard.standard_keyboard(message.from_user.id))
         return
-    text='Список доступных квестов:\n'
+    text = 'Список доступных квестов:\n'
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
     additional_info['buttons-quest_id']={}
     for i in range(len(quest_list)):
         #структура id, Name, description
-        text+='{}) {}: {}'.format(i+1, quest_list[i][1], quest_list[i][2])
-        markup.row('{}) {}\n'.format(i+1, quest_list[i][1]))
+        text += '{}) <b>{}</b>: {}\n'.format(i+1, quest_list[i][1], quest_list[i][2])
+        markup.row('{}) {}'.format(i+1, quest_list[i][1]))
         additional_info['buttons-quest_id']['{}) {}'.format(i+1, quest_list[i][1])]= quest_list[i][0]
-    text+='\nВыбери свой квсет кнопкой ниже.'
-    bot.send_message(message.chat.id, text, reply_markup=markup)
+    text += '\nВыбери свой квеcт кнопкой ниже.'
+    bot.send_message(message.chat.id, text, parse_mode='HTML', reply_markup=markup)
     status = 'neead_quest_choice'
     put_operations()
 
 def give_quest():
     """Отправка квеста.
 
-    @Не написано
+    @Написано, тестируется
     Предполагается с кнопкой "начать" - нуно чтобы дать пользователь возможность выйти на исходную позицию, если надо.
     Можно заменить  пока на выдачу первого вопроса сразу.
     """
-    quest_id = additional_info.get('buttons-quest_id',[]).get(message.text, None)
+    global status, additional_info
+    quest_id = additional_info.get('buttons-quest_id',{}).get(message.text, None)
     additional_info.pop('buttons-quest_id', None)
     if not quest_id:
         #@обработка ошибки. Сообщение об ошибке и редирект на show_quest_list
-        pass
+        db_connector.save_to_log('system', message=message, comment_text='Не удалось найти код квеста по кнопке')
+        bot.send_message(message.chat.id, 'Нужно выбрать квест кнопкой', reply_markup=types.ReplyKeyboardHide())
+        show_quest_list()
     else:
         additional_info['quest_id']=quest_id
-        give_question()
+        bot.send_message(message.chat.id, 'Ваш квест начинается. Удачи!', reply_markup=types.ReplyKeyboardHide())
+        give_question(next_q=True)
     #или сразу редиректить на give_question
     #status = 'need_question'
     #put_operations()
 
-def give_question():
+def give_question(next_q = True):
     """Выслать вопрос TSS
 
-    @Не написано
+    @Написано, тестируется
     Типы вопросов
     text
     dig
     geo - выслать кнопку запроса координат.
     """
+    global status, additional_info
     quest_id = additional_info.get('quest_id')
     last_question_id = additional_info.get('question_id')
     if not quest_id:
-        #Обработка ошибки
-        pass
+        db_connector.save_to_log('system', message=message, comment_text='Не удалось найти код квеста в additional_info')
+        bot.send_message(message.chat.id, 'Что-то пошло не так...', reply_markup=types.ReplyKeyboardHide())
+        show_quest_list()
     else:
-        next_quest=db_connector.get_next_question(quest_id=quest_id, question_id=last_question_id)
+        if next_q:
+            next_quest=db_connector.get_next_question(quest_id=quest_id, question_id=last_question_id)
+        else:
+            next_quest=db_connector.get_question(question_id=last_question_id)
         if next_quest:
             #Структура ID, description, answer_type, correct_answer
             (question_id, description, answer_type, correct_answer) = next_quest
-            if answer_type=='geo':
+            if answer_type == 'geo':
                 markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
                 markup.add(types.KeyboardButton(text=r'Вышел на точку!', request_location=True))
             else:
                 markup = types.ReplyKeyboardHide()
-
-            #Тут отправка текста вопроса с клавиатурой.
             additional_info['question_id']=question_id
             status = 'need_answer'
             put_operations()
-        else:
+            bot.send_message(message.chat.id, description, reply_markup=markup)
+        elif next_q:
             finish_quest()
+        else:
+            db_connector.save_to_log('system', message=message,
+                                     comment_text='Вопрос где-то потерялся')
+            bot.send_message(message.chat.id, 'Что-то пошло не так...', reply_markup=types.ReplyKeyboardHide())
+            show_quest_list()
 
 def check_answer():
     """Проверка правильности ответа на вопрос.
@@ -111,13 +125,20 @@ def check_answer():
     dig    '4'
     geo    {'lat': 55.809913, 'long': 37.462587, 'accur': 50, 'hint_meters': True}
     """
-    pass
+    global status, additional_info
+    give_question(next_q=True)
+
 
 def cancel_quest():
-    pass
+    db_connector.put_user_operation(message.from_user.id)
+    bot.send_message(message.chat.id, "Квест отменён",
+                     reply_markup=standard.standard_keyboard(message.from_user.id))
+
 
 def finish_quest():
-    pass
+    global status, additional_info
+    db_connector.put_user_operation(message.from_user.id)
+    bot.send_message(message.chat.id, "Вы победили! Поздравляю!", reply_markup=standard.standard_keyboard(message.from_user.id))
 
 def quest_flow(bot_in, message_in):
     """Основной поток маршрутизации для квестовой части бота.
@@ -125,9 +146,9 @@ def quest_flow(bot_in, message_in):
     Принимает объекты bot, message
     Если это первый вызов, то выдаст список квестов, """
     status_dic = {
-        'neead_quest_choice': give_quest(),
-        'need_question': give_question(),
-        'need_answer': check_answer(),
+        'neead_quest_choice': give_quest,
+        'need_question': give_question,
+        'need_answer': check_answer,
     }
     global operation, status, additional_info, bot, message
     bot = bot_in
@@ -142,4 +163,4 @@ def quest_flow(bot_in, message_in):
     elif utils.text_lower_wo_command(message) in ('cancel', 'отмена'):
         cancel_quest()
     else:
-        status_dic[status]
+        status_dic[status]()

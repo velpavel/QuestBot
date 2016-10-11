@@ -79,11 +79,11 @@ def handle_admin_com(message):
     admin_functions.admin_flow(bot, message)
 
 @bot.message_handler(content_types=['text','photo','document', 'location'],
-                     func=lambda message: db_connector.get_user_operation(message.from_user.id)[0] in (do_quest.opDoQest))
-@bot.message_handler(content_types=['text'], func=lambda message: utils.text_lower_wo_command(message) in (utils.text_lower_wo_command(standard.start_quest_command),))
+                     func=lambda message: db_connector.get_user_operation(message.from_user.id)[0] in (do_quest.opDoQest,))
+@bot.message_handler(content_types=['text'], func=lambda message: utils.text_lower_wo_command(message) in (standard.start_quest_command.lower(),))
 def handle_do_quest(message):
     #Тут перенаправление на корневую функцию файла do_quest.py
-    pass
+    do_quest.quest_flow(bot, message)
 
 #Сюда добавлять функции/хендлеры обработки.
 
@@ -96,7 +96,7 @@ def msg(message):
     Можно использовать как шаблон.
     """
     db_connector.save_to_log('user', message) #Сохранение входящего сообщения в БД. Для статистики.
-    bot.send_message(message.chat.id, 'Рад с тобой пообщаться.', reply_markup=types.ReplyKeyboardHide())
+    bot.send_message(message.chat.id, 'Рад с тобой пообщаться.', reply_markup=standard.standard_keyboard(message.from_user.id))
 
 if __name__ == '__main__':
     """Запуск бота
