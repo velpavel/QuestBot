@@ -44,6 +44,13 @@ CREATE TABLE quest_quest (ID INTEGER PRIMARY KEY AUTOINCREMENT, Name, Author, De
 -- Индекс: idx_user_operation_telegramid
 CREATE UNIQUE INDEX idx_user_operation_telegramid ON user_operation (Telegramid);
 
+INSERT INTO quest_quest (ID, Name, Author, Description, Photo, Start_location, Type, Active) VALUES (1, 'Первый квест', 'PaVel', 'Нужно просто пройти страшный и ужасный квест', NULL, NULL, NULL, 1);
+INSERT INTO quest_quest (ID, Name, Author, Description, Photo, Start_location, Type, Active) VALUES (2, 'Второй квест', 'PaVel', 'Не надо его трогать', NULL, NULL, NULL, 1);
+INSERT INTO quest_task (id, quest_id, sequence, description, photo, answer_type, correct_answer, Active) VALUES (1, 1, 1, 'Если всё понял напиши "Да"', NULL, 'text', 'да', 1);
+INSERT INTO quest_task (id, quest_id, sequence, description, photo, answer_type, correct_answer, Active) VALUES (2, 1, 2, 'Сколько будет 2+2? Отправь цифру', NULL, 'dig', '4', 1);
+INSERT INTO quest_task (id, quest_id, sequence, description, photo, answer_type, correct_answer, Active) VALUES (3, 1, 3, 'Доедь до станции метро Щукинская. Найди ближайшую остановку 15го трамвая. Стоя на ней нажми кнопку ниже.', NULL, 'geo', '{"accur": 50, "hint_meters": true, "lat": 55.809913, "long": 37.462587}', 1);
+INSERT INTO quest_task (id, quest_id, sequence, description, photo, answer_type, correct_answer, Active) VALUES (4, 2, 1, 'Ну не надо было трогать. Понял?', NULL, 'text', 'да', 1);
+
 COMMIT TRANSACTION;
 PRAGMA foreign_keys = on;
 '''
