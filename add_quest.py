@@ -87,7 +87,7 @@ def ask_question_desk():
 def take_question_desc():
     global status, additional_info
     if message.content_type != 'text':
-        bot.send_message(message.chat.id, 'Введите Введите текст задания',
+        bot.send_message(message.chat.id, 'Введите текст задания',
                          reply_markup=types.ReplyKeyboardHide())
         return
 

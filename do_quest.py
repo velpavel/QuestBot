@@ -48,7 +48,7 @@ def show_quest_list():
         text += '{}) <b>{}</b>: {}\n'.format(i+1, quest_list[i][1], quest_list[i][2])
         markup.row('{}) {}'.format(i+1, quest_list[i][1]))
         additional_info['buttons-quest_id']['{}) {}'.format(i+1, quest_list[i][1])]= quest_list[i][0]
-    text += '\nВыбери свой квеcт кнопкой ниже.'
+    text += '\nВыберите свой квеcт кнопкой ниже.'
     bot.send_message(message.chat.id, text, parse_mode='HTML', reply_markup=markup)
     status = 'neead_quest_choice'
     put_operations()

@@ -42,7 +42,9 @@ def handle_start_help(message):
     """
     global admin_id
     db_connector.save_to_log('user', message)
-    help_str='''Help_str'''
+    help_str='''Добро пожаловать.
+
+    Здесь можн проходить квесты - приключения в реальности. Выбирите себе квест и наслаждайтесь.'''
     #Ниже заполнение пустого admin_id
     if not admin_id:
         admin_id = str(message.from_user.id)
