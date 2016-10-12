@@ -79,7 +79,7 @@ def take_quest_photo():
 
 def ask_question_desk():
     global status, additional_info
-    bot.send_message(message.chat.id, 'Введите название вопроса',
+    bot.send_message(message.chat.id, 'Введите текст задания',
                      reply_markup=types.ReplyKeyboardHide())
     status = 'need_question_desc'
     put_operations()
@@ -87,12 +87,12 @@ def ask_question_desk():
 def take_question_desc():
     global status, additional_info
     if message.content_type != 'text':
-        bot.send_message(message.chat.id, 'Введите описание квеста или нажмите /cancel',
+        bot.send_message(message.chat.id, 'Введите Введите текст задания',
                          reply_markup=types.ReplyKeyboardHide())
         return
 
     additional_info['question_desc'] = message.text
-    bot.send_message(message.chat.id, 'Приложите фото к вопросу или нажмите /skip - вопрос без фото.',
+    bot.send_message(message.chat.id, 'Приложите фото к заданию или нажмите /skip - задание без фото.',
                      reply_markup=types.ReplyKeyboardHide())
     status = 'need_question_photo'
     put_operations()
@@ -102,7 +102,7 @@ def take_question_photo():
     if not (message.content_type in ['photo', ] \
                     or (
                 message.content_type == 'text' and utils.text_lower_wo_command(message) in ('skip', 'пропустить'))):
-        bot.send_message(message.chat.id, 'Приложите фото к вопросу или нажмите /skip - вопрос без фото.',
+        bot.send_message(message.chat.id, 'Приложите фото к заданию или нажмите /skip - задание без фото.',
                          reply_markup=types.ReplyKeyboardHide())
         return
 
@@ -121,14 +121,13 @@ def ask_question_type():
 
     status = 'need_question_type'
     put_operations()
-    bot.send_message(message.chat.id, 'Выберите тип вопроса кнопкой ниже',
+    bot.send_message(message.chat.id, 'Выберите тип задания кнопкой ниже',
                      reply_markup=markup)
 
 def take_question_type():
     global status, additional_info
     if message.content_type != 'text' or message.text not in question_types.keys():
-        bot.send_message(message.chat.id, 'Введите описание квеста или нажмите /cancel',
-                         reply_markup=types.ReplyKeyboardHide())
+        ask_question_type()
         return
 
     additional_info['quest_type'] = question_types.get(message.text)
@@ -158,8 +157,10 @@ def ask_take_question_answer():
     def ask_coords():
         additional_info['answer_step'] = 'take_gps'
         put_operations()
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+        markup.add(types.KeyboardButton(text=r'Отправить текущее местоположениею. Я тут.', request_location=True))
         bot.send_message(message.chat.id, 'Пришлите геолокацию правильного ответа. Либо точкой на карте, либо 2 числа через проел координаты широта, долгота в формате как в примере 55.809913 37.462587',
-                         reply_markup=types.ReplyKeyboardHide())
+                         reply_markup=markup)
 
     def ask_geo_help():
         additional_info['answer_step'] = 'take_geo_help'
@@ -232,7 +233,7 @@ def ask_more_questions():
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
     markup.row('Да')
     markup.row('Нет')
-    bot.send_message(message.chat.id, 'Добавить ещё вопрос?',
+    bot.send_message(message.chat.id, 'Добавить ещё задание?',
                      reply_markup=markup)
 
 def answer_more_questions():
