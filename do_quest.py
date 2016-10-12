@@ -112,7 +112,7 @@ def give_question(next_q = True):
             put_operations()
             bot.send_message(message.chat.id, description, reply_markup=markup)
             if photo:
-                bot.send_photo(message.chat.id, photo, reply_markup=types.ReplyKeyboardHide())
+                bot.send_photo(message.chat.id, photo, reply_markup=markup)
         elif next_q:
             finish_quest()
         else:
