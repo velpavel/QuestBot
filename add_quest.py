@@ -157,8 +157,10 @@ def ask_take_question_answer():
     def ask_coords():
         additional_info['answer_step'] = 'take_gps'
         put_operations()
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+        markup.add(types.KeyboardButton(text=r'Отправить текущее местоположениею. Я тут.', request_location=True))
         bot.send_message(message.chat.id, 'Пришлите геолокацию правильного ответа. Либо точкой на карте, либо 2 числа через проел координаты широта, долгота в формате как в примере 55.809913 37.462587',
-                         reply_markup=types.ReplyKeyboardHide())
+                         reply_markup=markup)
 
     def ask_geo_help():
         additional_info['answer_step'] = 'take_geo_help'
