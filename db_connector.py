@@ -176,7 +176,7 @@ def get_quest_list():
     return result
 
 def get_next_question(quest_id, question_id=None):
-    """Получить следующий вопрос
+    """Получить следующий вопрос (или первый)
     """
     sql_t = '''select ID, description, answer_type, correct_answer from quest_task
         where Active=1 {}
@@ -205,3 +205,31 @@ def get_question(question_id):
     result = cursor.fetchone()
     sql_lite_close(db)
     return result
+
+def add_new_quest(user_id, name, description, photo_id):
+    sql = 'insert into quest_quest (Name, Author, Description, Photo, Active) select ?, Name, ?, ?, 0 from Users where Telegramid= ?'
+    (db, cursor) = sql_lite_connect()
+    cursor.execute(sql, (name, description, photo_id, user_id))
+    id = cursor.lastrowid
+    sql_lite_close(db)
+    return id
+
+def add_new_question(quest_id, description, photo, answer_type, correct_answer):
+    sql = '''insert into quest_task (quest_id, sequence, Description, Photo, answer_type, correct_answer)
+            values (?, ?, ?, ?, ? ,?)'''
+    sql_get_max = 'select max(sequence) from quest_task where quest_id = ?'
+    (db, cursor) = sql_lite_connect()
+    cursor.execute(sql_get_max, (quest_id,))
+    seq=cursor.fetchone()
+    if seq[0]:
+        seq=seq[0]+1
+    else:
+        seq=1
+    cursor.execute(sql, (quest_id, seq, description, photo, answer_type, correct_answer))
+    sql_lite_close(db)
+
+def activate_quest(quest_id, activate=True):
+    sql = 'update quest_quest set active=? where ID=?'
+    (db, cursor) = sql_lite_connect()
+    cursor.execute(sql, (1 if activate else 0, quest_id,))
+    sql_lite_close(db)
