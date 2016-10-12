@@ -70,14 +70,16 @@ def give_quest():
         show_quest_list()
     else:
         additional_info['quest_id']=quest_id
+        (name, description, photo) = db_connector.get_quest(quest_id)
+        text='<b>{}</b> \n\n{}'.format(name, description)
+        bot.send_message(message.chat.id, text, parse_mode='HTML', reply_markup=types.ReplyKeyboardHide())
+        if photo:
+            bot.send_photo(message.chat.id, photo, reply_markup=types.ReplyKeyboardHide())
         bot.send_message(message.chat.id, 'Ваш квест начинается. Удачи!', reply_markup=types.ReplyKeyboardHide())
         give_question(next_q=True)
-    #или сразу редиректить на give_question
-    #status = 'need_question'
-    #put_operations()
 
 def give_question(next_q = True):
-    """Выслать вопрос TSS
+    """Выслать вопрос
 
     @Написано, тестируется
     Типы вопросов
@@ -99,7 +101,7 @@ def give_question(next_q = True):
             next_quest=db_connector.get_question(question_id=last_question_id)
         if next_quest:
             #Структура ID, description, answer_type, correct_answer
-            (question_id, description, answer_type, correct_answer) = next_quest
+            (question_id, description, photo, answer_type, correct_answer) = next_quest
             if answer_type == 'geo':
                 markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
                 markup.add(types.KeyboardButton(text=r'Вышел на точку!', request_location=True))
@@ -109,6 +111,8 @@ def give_question(next_q = True):
             status = 'need_answer'
             put_operations()
             bot.send_message(message.chat.id, description, reply_markup=markup)
+            if photo:
+                bot.send_photo(message.chat.id, photo, reply_markup=types.ReplyKeyboardHide())
         elif next_q:
             finish_quest()
         else:
@@ -133,7 +137,7 @@ def check_answer():
         is_answer_correct = False
         add_answer_text=''
         # Структура ID, description, answer_type, correct_answer
-        (question_id, description, answer_type, correct_answer) = question
+        (question_id, description, photo, answer_type, correct_answer) = question
         if answer_type == 'geo':
             if message.content_type == 'location':
                 correct_answer = json.loads(correct_answer)

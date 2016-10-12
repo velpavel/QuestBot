@@ -175,10 +175,20 @@ def get_quest_list():
     sql_lite_close(db)
     return result
 
+def get_quest(id):
+    """Получить список квестов
+    """
+    sql = '''select Name, Description, Photo from quest_quest where ID=?'''
+    (db, cursor) = sql_lite_connect()
+    cursor.execute(sql,(id,))
+    result = cursor.fetchone()
+    sql_lite_close(db)
+    return result
+
 def get_next_question(quest_id, question_id=None):
     """Получить следующий вопрос (или первый)
     """
-    sql_t = '''select ID, description, answer_type, correct_answer from quest_task
+    sql_t = '''select ID, description, photo, answer_type, correct_answer from quest_task
         where Active=1 {}
         and quest_id=?
         order by sequence
@@ -198,7 +208,7 @@ def get_next_question(quest_id, question_id=None):
 def get_question(question_id):
     """Получить вопрос по id
     """
-    sql = '''select ID, description, answer_type, correct_answer from quest_task
+    sql = '''select ID, description, photo, answer_type, correct_answer from quest_task
         where Active=1 and ID=?'''
     (db, cursor) = sql_lite_connect()
     cursor.execute(sql, (question_id,))
