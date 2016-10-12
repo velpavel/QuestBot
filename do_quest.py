@@ -120,13 +120,54 @@ def give_question(next_q = True):
 def check_answer():
     """Проверка правильности ответа на вопрос.
 
+    @Добавить проверку на тип ответа. Всюду.
     Типы вопросов и как хранятся в БД
     text   'да'
     dig    '4'
     geo    {'lat': 55.809913, 'long': 37.462587, 'accur': 50, 'hint_meters': True}
     """
     global status, additional_info
-    give_question(next_q=True)
+
+    question = db_connector.get_question(question_id=additional_info.get('question_id'))
+    if question:
+        is_answer_correct = False
+        add_answer_text=''
+        # Структура ID, description, answer_type, correct_answer
+        (question_id, description, answer_type, correct_answer) = question
+        if answer_type == 'geo':
+            if message.content_type == 'location':
+                correct_answer = json.loads(correct_answer)
+                dist = utils.Distance(correct_answer['lat'], correct_answer['long'], message.location.latitude, message.location.longitude)
+                if dist>correct_answer['accur']:
+                    is_answer_correct = False
+                    if correct_answer.get('hint_meters', False):
+                        add_answer_text = '\nРасстояние до точки '+str(dist)+' метров.'
+                else:
+                    is_answer_correct=True
+            else:
+                is_answer_correct = False
+                add_answer_text = '\nОтвет нужно отправить кнопкой!.'
+        else:
+            if message.content_type == 'text':
+                if correct_answer.lower() == message.text.lower():
+                    is_answer_correct = True
+                else:
+                    is_answer_correct = False
+            else:
+                is_answer_correct = False
+                add_answer_text = '\nОтвет нужно отправить текстом-сообщением.'
+        if is_answer_correct:
+            bot.send_message(message.chat.id, 'Верно!', reply_markup=types.ReplyKeyboardHide())
+            give_question(next_q=True)
+        else:
+            bot.send_message(message.chat.id, 'Нет! Не верно!'+add_answer_text, reply_markup=types.ReplyKeyboardHide())
+            give_question(next_q=False)
+
+    else:
+        db_connector.save_to_log('system', message=message,
+                                 comment_text='Вопрос где-то потерялся')
+        bot.send_message(message.chat.id, 'Что-то пошло не так...', reply_markup=types.ReplyKeyboardHide())
+        show_quest_list()
 
 
 def cancel_quest():
@@ -143,6 +184,7 @@ def finish_quest():
 def quest_flow(bot_in, message_in):
     """Основной поток маршрутизации для квестовой части бота.
 
+    @Можно добавить в словарь проверку на типы ответа. Или вынести в функции
     Принимает объекты bot, message
     Если это первый вызов, то выдаст список квестов, """
     status_dic = {
