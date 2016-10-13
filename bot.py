@@ -85,6 +85,7 @@ def handle_admin_com(message):
 @bot.message_handler(content_types=['text'], func=lambda message: utils.text_lower_wo_command(message) in (standard.start_quest_command.lower(),))
 def handle_do_quest(message):
     #Тут перенаправление на корневую функцию файла do_quest.py
+    db_connector.save_to_log('user', message)
     do_quest.quest_flow(bot, message)
 
 @bot.message_handler(content_types=['text'], func=lambda message: utils.text_lower_wo_command(message) in standard.add_quest_command)
@@ -92,6 +93,7 @@ def handle_do_quest(message):
                      func=lambda message: db_connector.get_user_operation(message.from_user.id)[0] in (add_quest.opAddQest,))
 def handle_add_quest(message):
     #Тут перенаправление на корневую функцию файла add_quest.py
+    db_connector.save_to_log('user', message)
     add_quest.add_quest_flow(bot, message)
 
 #Сюда добавлять функции/хендлеры обработки.
