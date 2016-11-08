@@ -142,7 +142,7 @@ def check_answer():
             if message.content_type == 'location':
                 correct_answer = json.loads(correct_answer)
                 dist = utils.Distance(correct_answer['lat'], correct_answer['long'], message.location.latitude, message.location.longitude)
-                if dist>correct_answer['accur']:
+                if dist > correct_answer['accur']:
                     is_answer_correct = False
                     if correct_answer.get('hint_meters', False):
                         add_answer_text = '\nРасстояние до точки '+str(dist)+' метров.'
