@@ -39,7 +39,7 @@ def next_step(bot, message):
         procedure[status][1](bot, message)
 
 def finish_reg(bot, message):
-    db_connector.register_user(message.from_user.id, registrationDone=1)
+    db_connector.register_user(message.from_user.id, registration_done=1)
     db_connector.put_user_operation(message.from_user.id)
     bot.send_message(message.chat.id, 'Регистрация завершена', reply_markup=standard.standard_keyboard(message.from_user.id))
 
@@ -133,7 +133,7 @@ def register_flow(bot, message):
     global operation, status, additional_info
     (operation, status, additional_info) = db_connector.get_user_operation(message.from_user.id)
     if not operation or operation != opRegister:
-        if not procedure: db_connector.register_user(message.from_user.id, registrationDone=1)
+        if not procedure: db_connector.register_user(message.from_user.id, registration_done=1)
         else:
             bot.send_message(message.chat.id, "Для начала работы необходимо зарегестрироваться", reply_markup=types.ReplyKeyboardHide())
             next_step(bot, message)
