@@ -124,7 +124,7 @@ def save_to_log(from_who='user', message_type=None, message=None, comment_text='
     session = DBSession()
     log = Log(datetime=datetime.datetime.now(), from_who=from_who, user_id=tid, msg_text=msg_text,
               msg_type=message_type, operation=operation.current_operation, status=operation.operation_status,
-              additional_info=operation.additional_info, function=inspect.stack()[1][3], comment=comment_text)
+              additional_info=operation.additional_info_db, function=inspect.stack()[1][3], comment=comment_text)
     session.add(log)
     session.commit()
     session.close()

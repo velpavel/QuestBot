@@ -1,6 +1,6 @@
 from telebot import types
 
-start_quest_command = 'найти квест'
+start_quest_command = ['найти квест', ]
 add_quest_command = ['add_quest', 'добавить квест']
 
 def standard_keyboard(user_id=None):

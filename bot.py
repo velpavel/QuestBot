@@ -10,7 +10,8 @@ import datetime, time
 from telebot import types
 
 import db_connector
-from registration import register_flow
+from models import User, Operation
+from registration import register_flow, opRegister
 import admin_functions, do_quest, add_quest
 import standard, utils
 
@@ -27,8 +28,8 @@ bot = telebot.TeleBot(config['BASE']['Token'])
 admin_id = config['BASE'].get('Admin_id')
 admin_id = int(admin_id) if admin_id.isdigit() else 0
 
-@bot.message_handler(commands=['start', 'help'])
-def handle_start_help(message):
+#@bot.message_handler(commands=['start', 'help'])
+def handle_start_help(message, session, user):
     """Обработка /start /help команд
 
     Необходимо менять help_str - приветсвие бота.
@@ -41,7 +42,6 @@ def handle_start_help(message):
     @! пофиксить
     """
     global admin_id
-    db_connector.save_to_log('user', message)
     help_str='''Добро пожаловать.
 
     Здесь можно проходить квесты - приключения в реальности. Выбирите себе квест и наслаждайтесь.'''
@@ -54,60 +54,43 @@ def handle_start_help(message):
 
     bot.send_message(message.chat.id, help_str)
     #Редирект незарегенного пользователя на регистрацию.
-    if not (db_connector.is_user_registered(message.from_user.id)):
-        register_flow(bot, message)
+    if not (user.registrationDone):
+        register_flow(bot, message, session)
 
-@bot.message_handler(func=lambda message: not db_connector.is_user_registered(message.from_user.id), content_types=['text','contact'])
-def handle_register(message):
-    """Обработка регистарции пользователя.
 
-    Ссылается на модуль, в котором реализована регистрация пользователя.
-    Перехватывает все сообщения незарегистрированного пользователя.
-    По результатам в таблице users у пользователя должна быть RegistrationDone==1
-    По умолчанию менять не надо, детали смотри в registration.py
-    """
-    db_connector.save_to_log('user', message)
-    register_flow(bot, message)
-
-@bot.message_handler(commands=admin_functions.admin_commands)
-def handle_admin_com(message):
-    """Функции админской "панели управления".
-
-    Детали смотри в admin_functions.py
-    Для правильной работы необходим заполненный admin_id в config
-    По умолчанию менть не надо.
-    """
-    db_connector.save_to_log('user', message)
-    admin_functions.admin_flow(bot, message)
-
-@bot.message_handler(content_types=['text','photo','document', 'location'],
-                     func=lambda message: db_connector.get_user_operation(message.from_user.id)[0] in (do_quest.opDoQest,))
-@bot.message_handler(content_types=['text'], func=lambda message: utils.text_lower_wo_command(message) in (standard.start_quest_command.lower(),))
-def handle_do_quest(message):
-    #Тут перенаправление на корневую функцию файла do_quest.py
-    db_connector.save_to_log('user', message)
-    do_quest.quest_flow(bot, message)
-
-@bot.message_handler(content_types=['text'], func=lambda message: utils.text_lower_wo_command(message) in standard.add_quest_command)
-@bot.message_handler(content_types=['text','photo','document', 'location'],
-                     func=lambda message: db_connector.get_user_operation(message.from_user.id)[0] in (add_quest.opAddQest,))
-def handle_add_quest(message):
-    #Тут перенаправление на корневую функцию файла add_quest.py
-    db_connector.save_to_log('user', message)
-    add_quest.add_quest_flow(bot, message)
-
-#Сюда добавлять функции/хендлеры обработки.
-
-@bot.message_handler(func=lambda message: True, content_types=['text', 'contact', 'photo', 'document', 'location'])
-def msg(message):
+#@bot.message_handler(func=lambda message: True, content_types=['text', 'contact', 'photo', 'document', 'location'])
+def not_found(message):
     """Обработка всего, что не попало под остальные обработчики.
 
     В идеале сюда ничего не должно попадать.
     Предполагается изменение.
     Можно использовать как шаблон.
     """
-    db_connector.save_to_log('user', message) #Сохранение входящего сообщения в БД. Для статистики.
     bot.send_message(message.chat.id, 'Рад с тобой пообщаться.', reply_markup=standard.standard_keyboard(message.from_user.id))
+
+#Хэндлеры стали мешаться.
+@bot.message_handler(func=lambda message: True, content_types=['text', 'contact', 'photo', 'document', 'location'])
+def routing(message):
+    db_connector.save_to_log('user', message)  # Сохранение входящего сообщения в БД. Для статистики.
+    session = db_connector.get_session()
+    user = session.query(User).filter_by(telegramid=message.from_user.id).first()
+    text = utils.text_lower_wo_command(message)
+    if not user.active:
+        bot.send_message(message.chat.id, 'Вы заблокированы.')
+    elif text in ('start', 'help'):
+        handle_start_help(message, session, user)
+    elif not user.registrationDone or user.operation.current_operation == opRegister:
+        register_flow(bot, message, session)
+    elif text in admin_functions.admin_commands:
+        #Для правильной работы необходим заполненный admin_id в config
+        admin_functions.admin_flow(bot, message, session)
+    elif text in standard.start_quest_command or user.operation.current_operation == do_quest.opDoQest:
+        do_quest.quest_flow(bot, message, session)
+    elif text in standard.add_quest_command or user.operation.current_operation == add_quest.opAddQest:
+        add_quest.add_quest_flow(bot, message)
+    else:
+        not_found(message)
+    session.close()
 
 if __name__ == '__main__':
     """Запуск бота
