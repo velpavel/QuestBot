@@ -71,26 +71,41 @@ def not_found(message):
 #Хэндлеры стали мешаться.
 @bot.message_handler(func=lambda message: True, content_types=['text', 'contact', 'photo', 'document', 'location'])
 def routing(message):
-    db_connector.save_to_log('user', message)  # Сохранение входящего сообщения в БД. Для статистики.
     session = db_connector.get_session()
-    user = session.query(User).filter_by(telegramid=message.from_user.id).first()
-    text = utils.text_lower_wo_command(message)
-    if not user.active:
-        bot.send_message(message.chat.id, 'Вы заблокированы.')
-    elif text in ('start', 'help'):
-        handle_start_help(message, session, user)
-    elif not user.registrationDone or user.operation.current_operation == opRegister:
-        register_flow(bot, message, session)
-    elif text in admin_functions.admin_commands:
-        #Для правильной работы необходим заполненный admin_id в config
-        admin_functions.admin_flow(bot, message, session)
-    elif text in standard.start_quest_command or user.operation.current_operation == do_quest.opDoQest:
-        do_quest.quest_flow(bot, message, session)
-    elif text in standard.add_quest_command or user.operation.current_operation == add_quest.opAddQest:
-        add_quest.add_quest_flow(bot, message)
-    else:
-        not_found(message)
-    session.close()
+    try:
+        user = session.query(User).filter_by(telegramid=message.from_user.id).first()
+        if not user:
+            user=User(telegramid=message.from_user.id)
+            session.add(user)
+            user.operation = Operation()
+            session.commit()
+        if user.operation is None:
+            user.operation = Operation()
+            session.commit()
+        db_connector.save_to_log(from_who='user', message=message)  # Сохранение входящего сообщения в БД.
+        text = utils.text_lower_wo_command(message)
+        if not user.active:
+            bot.send_message(message.chat.id, 'Вы заблокированы.')
+        elif text in ('start', 'help'):
+            handle_start_help(message, session, user)
+        elif not user.registrationDone or user.operation.current_operation == opRegister:
+            register_flow(bot, message, session)
+        elif text in admin_functions.admin_commands:
+            #Для правильной работы необходим заполненный admin_id в config
+            admin_functions.admin_flow(bot, message, session)
+        elif text in standard.start_quest_command or user.operation.current_operation == do_quest.opDoQest:
+            do_quest.quest_flow(bot, message, session)
+        elif text in standard.add_quest_command or user.operation.current_operation == add_quest.opAddQest:
+            add_quest.add_quest_flow(bot, message)
+        else:
+            not_found(message)
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        raise e
+    finally:
+        session.close()
+
 
 if __name__ == '__main__':
     """Запуск бота

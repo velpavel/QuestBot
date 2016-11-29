@@ -24,7 +24,7 @@ from telebot import types
 bot = None
 message = None
 opDoQest = 'do_quest' #Операция для таблицы операций.
-operation, status, additional_info = ('', '', dict()) #операция, статус - текст, доп.инфа - словарь
+oper, status, additional_info = ('', '', dict()) #операция, статус - текст, доп.инфа - словарь
 
 def put_operations():
     db_connector.put_user_operation(message.from_user.id, operation=opDoQest, status=status,
@@ -196,7 +196,7 @@ def quest_flow(bot_in, message_in):
         'need_question': give_question,
         'need_answer': check_answer,
     }
-    global operation, status, additional_info, bot, message
+    global oper, status, additional_info, bot, message
     bot = bot_in
     message = message_in
     (operation, status, additional_info) = db_connector.get_user_operation(message.from_user.id)

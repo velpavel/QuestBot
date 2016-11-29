@@ -14,7 +14,7 @@ from telebot import types
 bot = None
 message = None
 opAddQest = 'add_quest' #Операция для таблицы операций.
-operation, status, additional_info = ('', '', dict()) #операция, статус - текст, доп.инфа - словарь
+oper, status, additional_info = ('', '', dict()) #операция, статус - текст, доп.инфа - словарь
 
 question_types = {'GPS координаты': 'geo',
                   'Текст': 'text',
@@ -274,7 +274,7 @@ def add_quest_flow(bot_in, message_in):
         'need_question_answer': ask_take_question_answer,
         'need_more_questions': answer_more_questions,
     }
-    global operation, status, additional_info, bot, message
+    global oper, status, additional_info, bot, message
     bot = bot_in
     message = message_in
     (operation, status, additional_info) = db_connector.get_user_operation(message.from_user.id)
