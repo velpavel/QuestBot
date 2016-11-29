@@ -80,7 +80,9 @@ class Log(Base):
     comment = Column(String())
 
     def __repr__(self):
-        return '{} {}: {}. {}'.format(self.datetime, self.user, self.operation_status, self.msg_text, self.function)
+        return '{} {}: {}. {}'.format(self.datetime.strftime('%d-%m-%Y %X'),
+                                      self.user if self.user else self.from_who,
+                                      self.msg_text if self.msg_text else self.comment, self.operation)
 
 
 # Quest###############

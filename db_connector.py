@@ -80,18 +80,6 @@ def register_user(tid, phone=None, name=None, email=None, registration_done=0):
     session.commit()
     session.close()
 
-
-def last_users():
-    session = DBSession()
-    count = session.query(User).count()
-    last_users_list = session.query(User).order_by(desc(User.registrationDate)).limit(10)
-    session.close()
-    last = []
-    for u in last_users_list:
-        last.append('{}. {}'.format(u.name, u.registrationDate))
-    return [count, last]
-
-
 # /Операции работы с таблицей users
 
 

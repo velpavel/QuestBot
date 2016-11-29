@@ -94,9 +94,11 @@ def routing(message):
             #Для правильной работы необходим заполненный admin_id в config
             admin_functions.admin_flow(bot, message, session)
         elif text in standard.start_quest_command or user.operation.current_operation == do_quest.opDoQest:
-            do_quest.quest_flow(bot, message, session)
+            #do_quest.quest_flow(bot, message, session)
+            pass
         elif text in standard.add_quest_command or user.operation.current_operation == add_quest.opAddQest:
-            add_quest.add_quest_flow(bot, message)
+            #add_quest.add_quest_flow(bot, message, session)
+            pass
         else:
             not_found(message)
         session.commit()
